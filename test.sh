@@ -11,3 +11,7 @@
 ./move_massive_execute_files.sh datasets/mass_query/thread_10/type3/batch/ datasets/mass_query/thread_10/type3/batch/
 ./move_massive_execute_files.sh datasets/mass_query/thread_50/type3/batch/ datasets/mass_query/thread_50/type3/batch/
 ./move_massive_execute_files.sh datasets/mass_query/thread_100/type3/batch/ datasets/mass_query/thread_100/type3/batch/
+
+./move_massive_execute_files.sh datasets/mass_query/thread_10/type2_b/batch/ datasets/mass_query/thread_10/type2_b/batch/
+./move_massive_execute_files.sh datasets/mass_query/thread_50/type2_b/batch/ datasets/mass_query/thread_50/type2_b/batch/
+./move_massive_execute_files.sh datasets/mass_query/thread_100/type2_b/batch/ datasets/mass_query/thread_100/type2_b/batch/
