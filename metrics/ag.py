@@ -1,7 +1,6 @@
 import pandas as pd
 from pathlib import Path
 import argparse
-import json
 
 def create_aggregate_batch(data: pd.DataFrame):
     """
@@ -160,7 +159,7 @@ def aggregate_data(base_dir: Path, threads, actions, output_dir: Path):
     output_dir.mkdir(parents=True, exist_ok=True)
     
     df_batch.to_csv(output_dir / 'batch_response_stats.csv', index=False)
-    df_statuscode.to_csv(output_dir / 'batch_statuscode_counts.csv', index=False)
+    # df_statuscode.to_csv(output_dir / 'batch_statuscode_counts.csv', index=False)
     df_memory.to_csv(output_dir / 'metrics_memory_stats.csv', index=False)
     df_cpu.to_csv(output_dir / 'metrics_cpu_stats.csv', index=False)
     df_record_counts.to_csv(output_dir / 'record_counts.csv', index=False)
@@ -178,7 +177,8 @@ def main():
     
     # スレッド数とアクション名の定義
     threads = [10, 50, 100]
-    actions = ["create_user_profile", "create_file_object", "create_organization"]
+    # actions = ["create_user_profile", "create_file_object", "create_organization"]
+    actions = ["type1", "type2", "type3"]
     
     aggregate_data(base_dir, threads, actions, output_dir)
 
