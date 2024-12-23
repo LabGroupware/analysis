@@ -50,6 +50,7 @@ def create_aggregate_metrics(memory_data: pd.DataFrame, cpu_data: pd.DataFrame):
         memory_stats (pd.DataFrame): NamespaceごとのMemory使用量の統計
         cpu_stats (pd.DataFrame): NamespaceごとのCPU使用量の統計
     """
+
     # Memory使用量の統計を計算
     memory_columns = ['MemoryUsage', 'AuthMemoryUsage', 'WebsocketMemoryUsage', 'WebGatewayMemoryUsage',
                       'JobMemoryUsage', 'UserProfileMemoryUsage', 'UserPreferenceMemoryUsage',
@@ -127,7 +128,7 @@ def aggregate_data(base_dir: Path, threads, actions, output_dir: Path):
             # Metricsデータの集計
             if metrics_dir.exists() and metrics_dir.is_dir():
                 memory_csv = metrics_dir / "metrics_memory_by_namespace.csv"
-                cpu_csv = metrics_dir / "metrics_service_app_cpu_by_namespace.csv"
+                cpu_csv = metrics_dir / "metrics_service_app_cpu_by_namespace_rate.csv"
                 
                 if memory_csv.exists() and cpu_csv.exists():
                     try:

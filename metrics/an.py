@@ -8,10 +8,21 @@ def process_metrics(cpu_file, memory_file):
     cpu_df = pd.read_csv(cpu_file)
     memory_df = pd.read_csv(memory_file)
 
-    # max-minのカラム追加
     # for df in [cpu_df, memory_df]:
+    #     # df['max_min_diff'] = df['max'] / df['min']
+    #     # df['max_min_diff'] = df['max'] - df['min']
+    #     df['max_min_diff'] = df['max']
+
+    # max-minのカラム追加
+    for df in [cpu_df]:
         # df['max_min_diff'] = df['max'] / df['min']
         # df['max_min_diff'] = df['max'] - df['min']
+        df['max_min_diff'] = df['max']
+
+    # max-minのカラム追加
+    for df in [memory_df]:
+        # df['max_min_diff'] = df['max'] / df['min']
+        df['max_min_diff'] = df['max'] - df['min']
         # df['max_min_diff'] = df['max']
 
     # Actionごと、Threadごとにまとめ、(Thread50/Thread10), (Thread100/Thread50) を計算
@@ -24,8 +35,8 @@ def process_metrics(cpu_file, memory_file):
     # cpu_ratio = calc_thread_ratio(cpu_df, 'max_min_diff')
     # memory_ratio = calc_thread_ratio(memory_df, 'max_min_diff')
 
-    cpu_ratio = calc_thread_ratio(cpu_df, 'max')
-    memory_ratio = calc_thread_ratio(memory_df, 'max')
+    cpu_ratio = calc_thread_ratio(cpu_df, 'max_min_diff')
+    memory_ratio = calc_thread_ratio(memory_df, 'max_min_diff')
 
     cpu_ratio["Namespace"] = cpu_ratio["Namespace"].str.replace("CPUUsage", "Usage")
     memory_ratio["Namespace"] = memory_ratio["Namespace"].str.replace("MemoryUsage", "Usage")
@@ -46,37 +57,54 @@ def calculate_cv(df, column):
     cv = std / mean
     return cv
 
+# cmd_ag_dir = 'metrics/cmd/ag'
+# query_ag_dir = 'metrics/query/ag'
+cmd_ag_dir = 'new/cmd/ag'
+query_ag_dir = 'new/query/ag'
+
 # ファイルパスを指定して実行
-cpu_query_file_path = 'metrics/cmd/ag/metrics_cpu_stats.csv'
-memory_query_file_path = 'metrics/cmd/ag/metrics_memory_stats.csv'
-cpu_cmd_file_path = 'metrics/query/ag/metrics_cpu_stats.csv'
-memory_cmd_file_path = 'metrics/query/ag/metrics_memory_stats.csv'
+cpu_query_file_path = f'{cmd_ag_dir}/metrics_cpu_stats.csv'
+memory_query_file_path = f'{cmd_ag_dir}/metrics_memory_stats.csv'
+cpu_cmd_file_path = f'{query_ag_dir}/metrics_cpu_stats.csv'
+memory_cmd_file_path = f'{query_ag_dir}/metrics_memory_stats.csv'
 query_result_df = process_metrics(cpu_query_file_path, memory_query_file_path)
 cmd_result_df = process_metrics(cpu_cmd_file_path, memory_cmd_file_path)
 
+# query_res_dir = 'metrics/query/an'
+# cmd_res_dir = 'metrics/cmd/an'
+query_res_dir = 'new/metrics/query/an'
+cmd_res_dir = 'new/metrics/cmd/an'
+
+# res_dir = 'metrics/an'
+res_dir = 'new/metrics/an'
+
+os.makedirs(query_res_dir, exist_ok=True)
+os.makedirs(cmd_res_dir, exist_ok=True)
+os.makedirs(res_dir, exist_ok=True)
+
 # 結果をCSVに保存
-query_result_df.to_csv('metrics/query/an/metrics_analysis_result.csv', index=False)
-cmd_result_df.to_csv('metrics/cmd/an/metrics_analysis_result.csv', index=False)
+query_result_df.to_csv(f'{query_res_dir}/metrics_analysis_result.csv', index=False)
+cmd_result_df.to_csv(f'{cmd_res_dir}/metrics_analysis_result.csv', index=False)
 
 # query_result_dfとcmd_result_dfをconcat
 result_df = pd.concat([query_result_df, cmd_result_df], ignore_index=True)
 
 
 # 結果をCSVに保存
-result_df.to_csv('metrics/an/metrics_analysis_result.csv', index=False)
+result_df.to_csv(f'{res_dir}/metrics_analysis_result.csv', index=False)
 
 aggregate_dict = {
     'OrganizationUsage': ['create_organization', 'type3'],
     'StorageUsage': ['create_file_object'],
     'UserProfileUsage': ['create_user_profile', 'create_organization', 'type2'],
     'UserPreferenceUsage': ['create_user_profile', 'type2'],
-    'TeamUsage': ['create_organization', 'type1'],
+    'TeamUsage': ['create_organization', 'type1', 'type2'],
     'PlanUsage': [],
 }
 
-t10_t50_dir = 'metrics/an/t10_t50'
+t10_t50_dir = f'{res_dir}/t10_t50'
 os.makedirs(t10_t50_dir, exist_ok=True)
-t50_t100_dir = 'metrics/an/t50_t100'
+t50_t100_dir = f'{res_dir}/t50_t100'
 os.makedirs(t50_t100_dir, exist_ok=True)
 
 # Namespaceごとに集計
