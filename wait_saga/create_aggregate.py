@@ -1,25 +1,31 @@
 import pandas as pd
 
-def create_aggregate(data: pd.DataFrame):
-    # # TotalTimeの"ms"を除去して整数化
-    data['TotalTime_ms'] = data['TotalTime'].str.replace('ms', '', regex=False).astype(int)
+actions_lists = {
+    "create_user_profile": ["CREATE_USER_PROFILE", "CREATE_USER_PREFERENCE"],
+    "create_file_object": ["VALIDATE_FILE_OBJECT", "CREATE_FILE_OBJECT"],
+    "create_organization": ["VALIDATE_ORGANIZATION", "VALIDATE_USER", "CREATE_ORGANIZATION_AND_ADD_INITIAL_ORGANIZATION_USER", "CREATE_DEFAULT_TEAM_AND_ADD_INITIAL_DEFAULT_TEAM_USER"],
+    "create_team": ["VALIDATE_TEAM", "VALIDATE_ORGANIZATION_AND_ORGANIZATION_USER_EXIST", "CREATE_TEAM_AND_ADD_INITIAL_TEAM_USER"],
+    "create_task": ["VALIDATE_TASK", "VALIDATE_USER", "VALIDATE_TEAM", "VALIDATE_FILE_OBJECT", "CREATE_TASK_AND_ATTACH_FILE_OBJECT"]
+}
 
-    # 日付をdatetime型へ変換（UTCを仮定、タイムゾーンは任意）
-    # ISO8601はpandasが自動認識しますが、必要なら utc=True オプションを付与
-    time_cols = ['StartTime', 'ReceivedDatetime', 'LastActionDatetime', 'ProcessStartDatetime', 'ActionDatetime']
-    for col in time_cols:
-        # 欠損値対策として errors='coerce'。必ず日付がある前提でなければエラー回避にも有効
-        if col in data.columns:
-            data[col] = pd.to_datetime(data[col], errors='coerce')
-
-    data['StartTime'] = pd.to_datetime(data['StartTime'], utc=True)
-    data['ActionDatetime'] = pd.to_datetime(data['ActionDatetime'], utc=True)
-    data['ReceivedDatetime'] = pd.to_datetime(data['ReceivedDatetime'], utc=True)
-    data['LastActionDatetime'] = pd.to_datetime(data['LastActionDatetime'], utc=True)
-    data['ProcessStartDatetime'] = pd.to_datetime(data['ProcessStartDatetime'], utc=True)
+def create_aggregate(data: pd.DataFrame, action: str) -> tuple:
 
     # JOB_PROCESSEDの解析
     processed = data[data['EventType'] == 'JOB_PROCESSED'].copy()
+
+    actions_list = actions_lists[action]
+
+    action_set = []
+    last_action = actions_list[-1]
+    last_action_time_diff = processed[processed['LastActionCode'] == last_action]['DatetimeDiff_ms'].mean()
+    pre_action_diff = 0
+    for action in actions_list:
+        processed_action = processed[processed['LastActionCode'] == action]
+        if processed_action.empty:
+            continue
+        currentActionDiff = processed_action['DatetimeDiff_ms'] - pre_action_diff
+        action_set.append(currentActionDiff.mean())
+        pre_action_diff = processed_action['DatetimeDiff_ms'].mean()
 
     # LastActionCodeごとに集計: TotalTime_ms と ActionMinusStart_ms
     processed_stats = processed.groupby('LastActionCode').agg(
@@ -56,4 +62,4 @@ def create_aggregate(data: pd.DataFrame):
         SeverTotalTime_var=('SeverTotalTime_ms', 'var')
     )
 
-    return processed_stats, success_client_stats.T, success_sever_stats.T
+    return processed_stats, success_client_stats.T, success_sever_stats.T, action_set, last_action_time_diff
