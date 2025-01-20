@@ -3,7 +3,7 @@ from pathlib import Path
 from create_aggregate import create_aggregate  # あらかじめ同ディレクトリか適切な場所に保存された関数ファイル
 
 base_dir = Path('./saga')
-thread_dirs = [d for d in base_dir.iterdir() if d.is_dir() and d.name.startswith('thread_10')]
+thread_dirs = [d for d in base_dir.iterdir() if d.is_dir() and d.name.startswith('thread_')]
 actions = ["create_user_profile", "create_file_object", "create_organization", "create_team", "create_task"]
 
 results_processed = []
