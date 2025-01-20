@@ -2,9 +2,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # aggregator.pyで生成されたCSVを読み込み
-processed_all = pd.read_csv('aggregate/processed_all.csv').sort_values(by='thread')
-success_client_all = pd.read_csv('aggregate/success_client_all.csv').sort_values(by='thread')
-success_server_all = pd.read_csv('aggregate/success_server_all.csv').sort_values(by='thread')
+processed_all = pd.read_csv('saga/res/aggregate/processed_all.csv').sort_values(by='thread')
+success_client_all = pd.read_csv('saga/res/aggregate/success_client_all.csv').sort_values(by='thread')
+success_server_all = pd.read_csv('saga/res/aggregate/success_server_all.csv').sort_values(by='thread')
 
 # 例えば、JOB_SUCCESSのClientTotalTime_meanをスレッド数で比較する可視化
 actions = success_client_all['action'].unique()
@@ -14,18 +14,25 @@ actions = success_client_all['action'].unique()
 #     subset.plot(x='thread', y='ClientTotalTime_mean', marker='o', label=f"{action} (n={subset['record_count'].iloc[0]})")
 
 for action in actions:
-    subset = success_client_all[success_client_all['action'] == action].sort_values(by='thread')
-    plt.plot(subset['thread'], subset['ClientTotalTime_mean'], marker='o', label=f"{action} (n={subset['record_count'].iloc[0]})")
-    # server_subset = success_server_all[success_server_all['action'] == action].sort_values(by='thread')
-    # plt.plot(server_subset['thread'], server_subset['SeverTotalTime_mean'], marker='o', label=f"{action} (n={server_subset['record_count'].sum()})")
-    # server_subset = success_server_all[success_server_all['action'] == action].sort_values(by='thread')
+    # Client
+    # subset = success_client_all[success_client_all['action'] == action].sort_values(by='thread')
+    # plt.plot(subset['thread'], subset['ClientTotalTime_mean'], marker='o', label=f"{action} (n={subset['record_count'].iloc[0]})")
+    
+    # Sever
+    server_subset = success_server_all[success_server_all['action'] == action].sort_values(by='thread')
+    plt.plot(server_subset['thread'], server_subset['SeverTotalTime_mean'], marker='o', label=f"{action} (n={server_subset['record_count'].sum()})")
     # plt.plot(server_subset['thread'], server_subset['SeverTotalTime_var'], marker='o', label=f"{action} (n={server_subset['record_count'].sum()})")
-    # server_subset = success_server_all[success_server_all['action'] == action].sort_values(by='thread')
-    # plt.plot(server_subset['thread'], server_subset['SeverTotalTime_median'], marker='o', label=f"{action} (n={server_subset['record_count'].sum()})")
 
 plt.xlabel('Thread Count')
-plt.ylabel('Client Mean Time (ms)')
-plt.title('Client Mean Time by Thread Count and Action (JOB_SUCCESS)')
+
+# Client
+# plt.ylabel('Client Mean Time (ms)')
+# plt.title('Client Mean Time by Thread Count and Action (JOB_SUCCESS)')
+
+# Sever
+plt.ylabel('Server Mean Time (ms)')
+plt.title('Server Mean Time by Thread Count and Action (JOB_SUCCESS)')
+
 plt.legend()
 
 plt.show()

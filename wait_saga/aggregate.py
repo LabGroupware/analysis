@@ -2,8 +2,8 @@ import pandas as pd
 from pathlib import Path
 from create_aggregate import create_aggregate  # あらかじめ同ディレクトリか適切な場所に保存された関数ファイル
 
-base_dir = Path('./datasets/wait_saga')
-thread_dirs = [d for d in base_dir.iterdir() if d.is_dir() and d.name.startswith('thread_')]
+base_dir = Path('./saga')
+thread_dirs = [d for d in base_dir.iterdir() if d.is_dir() and d.name.startswith('thread_10')]
 actions = ["create_user_profile", "create_file_object", "create_organization", "create_team", "create_task"]
 
 results_processed = []
@@ -57,8 +57,8 @@ success_client_all = pd.concat(results_success_client, ignore_index=True) if res
 success_server_all = pd.concat(results_success_sever, ignore_index=True) if results_success_sever else pd.DataFrame()
 
 # CSV出力
-processed_all.to_csv('aggregate/processed_all.csv', index=False)
-success_client_all.to_csv('aggregate/success_client_all.csv', index=False)
-success_server_all.to_csv('aggregate/success_server_all.csv', index=False)
+processed_all.to_csv('saga/res/aggregate/processed_all.csv', index=False)
+success_client_all.to_csv('saga/res/aggregate/success_client_all.csv', index=False)
+success_server_all.to_csv('saga/res/aggregate/success_server_all.csv', index=False)
 
 print("Complete creating CSV files.", processed_all.shape, success_client_all.shape, success_server_all.shape)
