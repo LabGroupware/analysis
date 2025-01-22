@@ -3,16 +3,6 @@ from pathlib import Path
 import argparse
 
 def create_aggregate_batch(data: pd.DataFrame):
-    """
-    BatchデータのResponseTimeとStatusCodeを集計する関数。
-
-    Parameters:
-        data (pd.DataFrame): Batch CSVデータ
-
-    Returns:
-        batch_stats (pd.Series): ResponseTimeの統計値
-        statuscode_counts (pd.DataFrame): StatusCodeのカウント
-    """
     # ResponseTimeを数値型に変換
     data['ResponseTime_ms'] = pd.to_numeric(data['ResponseTime'], errors='coerce')
     
@@ -39,18 +29,6 @@ def create_aggregate_batch(data: pd.DataFrame):
     return batch_stats, statuscode_counts
 
 def create_aggregate_metrics(memory_data: pd.DataFrame, cpu_data: pd.DataFrame):
-    """
-    MetricsデータのCPUとMemory使用量を集計する関数。
-
-    Parameters:
-        memory_data (pd.DataFrame): Memory Metrics CSVデータ
-        cpu_data (pd.DataFrame): CPU Metrics CSVデータ
-
-    Returns:
-        memory_stats (pd.DataFrame): NamespaceごとのMemory使用量の統計
-        cpu_stats (pd.DataFrame): NamespaceごとのCPU使用量の統計
-    """
-
     # Memory使用量の統計を計算
     memory_columns = ['MemoryUsage', 'AuthMemoryUsage', 'WebsocketMemoryUsage', 'WebGatewayMemoryUsage',
                       'JobMemoryUsage', 'UserProfileMemoryUsage', 'UserPreferenceMemoryUsage',
@@ -68,15 +46,6 @@ def create_aggregate_metrics(memory_data: pd.DataFrame, cpu_data: pd.DataFrame):
     return memory_stats, cpu_stats
 
 def aggregate_data(base_dir: Path, threads, actions, output_dir: Path):
-    """
-    ディレクトリ構造に基づいてデータを集計し、結果を保存します。
-
-    Parameters:
-        base_dir (Path): データが格納されている基点ディレクトリ
-        threads (list): スレッド数のリスト
-        actions (list): アクション名のリスト
-        output_dir (Path): 集計結果を保存するディレクトリ
-    """
     # 結果を格納するリスト
     batch_results = []
     statuscode_results = []
