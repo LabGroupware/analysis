@@ -11,7 +11,7 @@ scenarios = [
     "create_task",
     "get_users",
     "get_organizations",
-    "get_organization_with_users",
+    "get_organizations_with_users",
     # "sc1", "sc2", "sc3", "sc4", "sc5", "sc6", "sc7", "sc8", "sc9", "sc10",
     # "sc11", "sc12", "sc13", "sc14", "sc15", "sc16", "sc17", "sc18", "sc19", "sc20",
     # "sc21", "sc22", "sc23", "sc24", "sc25", "sc26", "sc27"
@@ -32,6 +32,10 @@ for t_dir in thread_dirs:
             df = pd.read_csv(csv_file)
 
             df['ResponseTime_ms'] = df['ResponseTime'].astype(int)
+
+            q = df['ResponseTime_ms'].quantile(0.85)
+
+            df = df[df['ResponseTime_ms'] < q]
 
             time_cols = ['SendDatetime', 'ReceivedDatetime']
             for col in time_cols:

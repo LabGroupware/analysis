@@ -18,6 +18,8 @@ def display_results(aggregate_results):
         })
     
     df_response = pd.DataFrame(response_time_data)
+    # Threadでソート
+    df_response = df_response.sort_values(by=['Thread', 'Scenario'])
     print("\n=== ResponseTimeの統計 ===")
     print(df_response.to_markdown(index=False))
     
@@ -31,6 +33,9 @@ def display_results(aggregate_results):
 def visualize_results(aggregate_results, scenarios, threads):
     # ResponseTimeの平均をアクションごとにプロット
     plt.figure(figsize=(12, 8))
+
+    # threadの並び替え    
+    threads = sorted(threads)
     
     for scenario in scenarios:
         mean_values = []
