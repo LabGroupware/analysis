@@ -13,12 +13,12 @@ scenarios = [
 metrics_lists = ['cpu_rate', 'memory', 'db_cpu_rate', 'db_memory']
 
 related_scenarios_map = {
-    "UserProfile": ["sc1", "sc3", "sc8", "sc10", "sc11", "sc21"],
-    "UserPreference": ["sc2", "sc12", "sc13"],
+    "UserProfile": ["sc1", "sc3", "sc4", "sc8", "sc10", "sc11", "sc13", "sc15", "sc17", "sc19", "sc21"],
+    "UserPreference": ["sc1", "sc2", "sc12", "sc13"],
     "Organization": ["sc3", "sc4", "sc6", "sc7", "sc18", "sc19", "sc20", "sc21"],
     "Team": ["sc3", "sc4", "sc6", "sc7", "sc8", "sc14", "sc15", "sc16", "sc17"],
     "Plan": ["sc8", "sc9", "sc24", "sc25", "sc26", "sc27"],
-    "Storage": ["sc5", "sc8", "sc22", "sc23", "sc27"]
+    "Storage": ["sc5", "sc8", "sc22", "sc23", "sc25", "sc27"]
 }
 
 aggregate_results = []
