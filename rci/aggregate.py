@@ -129,7 +129,7 @@ def create_and_print_srci(data: dict, title: str, beta=0.2, gamma=0.8) -> tuple:
     # scenario_metrics.plot_k_means_clustering(2)
 
     # GMM(clusters)
-    scenario_metrics.plot_gaussian_mixture_clustering(2)
+    # scenario_metrics.plot_gaussian_mixture_clustering(2)
 
     each_sum = scenario_metrics.each_metrics_sum()
     return trace_ratio, each_sum
@@ -144,16 +144,16 @@ for ns, v in result['metricsMaps'].items():
             ret_val[ns][f"{k}_sum"] = bytes_to_human_readable(sums[k])
         else:
             ret_val[ns][f"{k}_sum"] = sums[k]
-# # App Metrics
-# for ns, v in maps['metricsAppMaps'].items():
-#     print(f"\n~~~~~~~~~~~~~~~~~~~~ Namespace: {ns}(Application) ~~~~~~~~~~~~~~~~~~~~")
-#     srci, _ = create_and_print_srci(v, ns)
-#     ret_val[ns]["Application"] = srci
-# # DB Metrics
-# for ns, v in maps['metricsDBMaps'].items():
-#     print(f"\n~~~~~~~~~~~~~~~~~~~~ Namespace: {ns}(DB) ~~~~~~~~~~~~~~~~~~~~")
-#     srci, _ = create_and_print_srci(v, ns)
-#     ret_val[ns]["DB"] = srci
+# App Metrics
+for ns, v in result['metricsAppMaps'].items():
+    print(f"\n~~~~~~~~~~~~~~~~~~~~ Namespace: {ns}(Application) ~~~~~~~~~~~~~~~~~~~~")
+    srci, _ = create_and_print_srci(v, ns)
+    ret_val[ns]["Application"] = srci
+# DB Metrics
+for ns, v in result['metricsDBMaps'].items():
+    print(f"\n~~~~~~~~~~~~~~~~~~~~ Namespace: {ns}(DB) ~~~~~~~~~~~~~~~~~~~~")
+    srci, _ = create_and_print_srci(v, ns)
+    ret_val[ns]["DB"] = srci
 
 for th, ns_val in ret_val.items():
     # print(f"\n==================== Thread: {th} ====================")
@@ -161,7 +161,7 @@ for th, ns_val in ret_val.items():
     for met in metrics_lists:
         sum_columns.append(f"{met}_sum")
     val_df = pd.DataFrame(ns_val, index=["All", "Application", "DB", *sum_columns])
-    # print(val_df.T)
+    print(val_df.T)
 
 beta_lists = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
 gamma_lists = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
