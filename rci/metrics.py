@@ -230,8 +230,8 @@ class ScenarioMetrics:
         for i, txt in enumerate(X.index.tolist()):
             ax.annotate(txt, (X.iloc[i, 0], X.iloc[i, 1]))
 
-        # plt.title(f"Gaussian Mixture Clustering ({self.title})")
-        # plt.show()
+        plt.title(f"Gaussian Mixture Clustering ({self.title})")
+        plt.show()
 
     def get_log_ratio_matrix(self) -> tuple[np.ndarray, pd.DataFrame]:
         """

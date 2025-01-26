@@ -6,8 +6,8 @@ from utils import bytes_to_human_readable
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
-base_dir = Path('./rci')
-thread_dirs = [d for d in base_dir.iterdir() if d.is_dir() and d.name.startswith('thread_')]
+# base_dir = Path('./rci/default')
+base_dir = Path('./rci/adjusted')
 scenarios = [
     "sc1", "sc2", "sc3", "sc4", "sc5", "sc6", "sc7", "sc8", "sc9", "sc10",
     "sc11", "sc12", "sc13", "sc14", "sc15", "sc16", "sc17", "sc18", "sc19", "sc20",
@@ -23,7 +23,8 @@ scenario_occurs_rate = [
 scenario_occurs_rate_map = dict(zip(scenarios, scenario_occurs_rate))
 
 metrics_lists = ['cpu_rate', 'memory', 'db_cpu_rate', 'db_memory']
-namespaces = ["UserProfile", "UserPreference", "Organization", "Team", "Plan", "Storage"]
+# namespaces = ["UserProfile", "UserPreference", "Organization", "Team", "Plan", "Storage"]
+namespaces = ["PlanCommand", "PlanQuery"]
 
 related_scenarios_map = {
     "UserProfile": ["sc1", "sc3", "sc4", "sc8", "sc10", "sc11", "sc13", "sc15", "sc17", "sc19", "sc21"],
@@ -31,86 +32,70 @@ related_scenarios_map = {
     "Organization": ["sc3", "sc4", "sc6", "sc7", "sc18", "sc19", "sc20", "sc21"],
     "Team": ["sc3", "sc4", "sc6", "sc7", "sc8", "sc14", "sc15", "sc16", "sc17"],
     "Plan": ["sc8", "sc9", "sc24", "sc25", "sc26", "sc27"],
+    "PlanCommand": ["sc8", "sc9"],
+    "PlanQuery": ["sc8", "sc9", "sc24", "sc25", "sc26", "sc27"],
     "Storage": ["sc5", "sc8", "sc22", "sc23", "sc25", "sc27"]
 }
 
 result = {}
 
 aggregate_results = {}
-threads = []
-for t_dir in thread_dirs:
-    thread_count = int(t_dir.name.replace('thread_', ''))
-    aggregate_results[thread_count] = {}
-    threads.append(thread_count)
-    for scenario in scenarios:
-        scenario_dir = t_dir / scenario
-        if not scenario_dir.exists():
+for scenario in scenarios:
+    scenario_dir = base_dir / scenario
+    if not scenario_dir.exists():
+        continue
+
+    metrics_map = {}
+    for metrics in metrics_lists:
+        metrics_dir = scenario_dir / metrics
+        if not metrics_dir.exists():
             continue
 
-        metrics_map = {}
-        for metrics in metrics_lists:
-            metrics_dir = scenario_dir / metrics
-            if not metrics_dir.exists():
-                continue
+        df_list = []
+        # csvファイルは一つのみと仮定
+        csv_file = list(metrics_dir.glob("*.csv"))[0]
+        df = pd.read_csv(csv_file)
+        # if metrics == 'memory' or metrics == 'db_memory':
+        #     metrics_map[metrics] = df[namespaces].max()
+        # else:
+        #     metrics_map[metrics] = df[namespaces].max() * 1000
+        metrics_map[metrics] = df[namespaces].max()
+    
+    aggregate_results[scenario] = metrics_map
 
-            df_list = []
-            # csvファイルは一つのみと仮定
-            csv_file = list(metrics_dir.glob("*.csv"))[0]
-            df = pd.read_csv(csv_file)
-            # if metrics == 'memory' or metrics == 'db_memory':
-            #     metrics_map[metrics] = df[namespaces].max()
-            # else:
-            #     metrics_map[metrics] = df[namespaces].max() * 1000
-            metrics_map[metrics] = df[namespaces].max()
-        
-        aggregate_results[thread_count][scenario] = metrics_map
+result = {
+    "metricsMaps": {},
+    "metricsAppMaps": {},
+    "metricsDBMaps": {},
+}
+for ns in namespaces:
+    result["metricsMaps"][ns] = {}
+    result["metricsAppMaps"][ns] = {}
+    result["metricsDBMaps"][ns] = {}
+    need_scenarios = related_scenarios_map[ns]
+    for sc in need_scenarios:
+        result["metricsMaps"][ns][sc] = {}
+        result["metricsAppMaps"][ns][sc] = {}
+        result["metricsDBMaps"][ns][sc] = {}
 
-for th in threads:
-    result[th] = {
-        "metricsMaps": {},
-        "metricsAppMaps": {},
-        "metricsDBMaps": {},
-    }
-    for ns in namespaces:
-        result[th]["metricsMaps"][ns] = {}
-        result[th]["metricsAppMaps"][ns] = {}
-        result[th]["metricsDBMaps"][ns] = {}
-        need_scenarios = related_scenarios_map[ns]
-        for sc in need_scenarios:
-            result[th]["metricsMaps"][ns][sc] = {}
-            result[th]["metricsAppMaps"][ns][sc] = {}
-            result[th]["metricsDBMaps"][ns][sc] = {}
-
-for thread, scenarios in aggregate_results.items():
-    for scenario, metrics in scenarios.items():
-        for metric, namespace in metrics.items():
-            for ns, v in namespace.items():
-                need_scenarios = related_scenarios_map[ns]
-                if scenario in need_scenarios:
-                    result[thread]["metricsMaps"][ns][scenario][metric] = v
-                    if metric.startswith("db_"):
-                        result[thread]["metricsDBMaps"][ns][scenario][metric.replace('db_', '')] = v
-                    else:
-                        result[thread]["metricsAppMaps"][ns][scenario][metric] = v
+for scenario, metrics in aggregate_results.items():
+    for metric, namespace in metrics.items():
+        for ns, v in namespace.items():
+            need_scenarios = related_scenarios_map[ns]
+            if scenario in need_scenarios:
+                result["metricsMaps"][ns][scenario][metric] = v
+                if metric.startswith("db_"):
+                    result["metricsDBMaps"][ns][scenario][metric.replace('db_', '')] = v
+                else:
+                    result["metricsAppMaps"][ns][scenario][metric] = v
 
 ret_val = {}
 
-for th in threads:
-    ret_val[th] = {}
-    for ns in namespaces:
-        ret_val[th][ns] = {}
+for ns in namespaces:
+    ret_val[ns] = {}
 
 
 def create_and_print_srci(data: dict, title: str, beta=0.2, gamma=0.8) -> tuple:
-    """
-    S-RCIを計算し、出力する。
-    
-    Args:
-    data (dict): メトリクスのデータ
-    
-    Returns:
-    float: S-RCI
-    """
     scenario_metrics = ScenarioMetrics(data, scenario_occurs_rate_map, title=title, beta=beta, gamma=gamma)
     # print("\nMetric DataFrame:")
     # print(scenario_metrics.get_metrics())
@@ -149,28 +134,26 @@ def create_and_print_srci(data: dict, title: str, beta=0.2, gamma=0.8) -> tuple:
     each_sum = scenario_metrics.each_metrics_sum()
     return trace_ratio, each_sum
 
-for th, maps in result.items():
-    print(f"\n==================== Thread: {th} ====================")
-    for ns, v in maps['metricsMaps'].items():
-        print(f"\n~~~~~~~~~~~~~~~~~~~~ Namespace: {ns} ~~~~~~~~~~~~~~~~~~~~")
-        srci, sums = create_and_print_srci(v, ns)
-        ret_val[th][ns]["All"] = srci
-        sums_keys = list(sums.keys())
-        for k in sums_keys:
-            if "memory" in k:
-                ret_val[th][ns][f"{k}_sum"] = bytes_to_human_readable(sums[k])
-            else:
-                ret_val[th][ns][f"{k}_sum"] = sums[k]
-    # # App Metrics
-    # for ns, v in maps['metricsAppMaps'].items():
-    #     print(f"\n~~~~~~~~~~~~~~~~~~~~ Namespace: {ns}(Application) ~~~~~~~~~~~~~~~~~~~~")
-    #     srci, _ = create_and_print_srci(v, ns)
-    #     ret_val[th][ns]["Application"] = srci
-    # # DB Metrics
-    # for ns, v in maps['metricsDBMaps'].items():
-    #     print(f"\n~~~~~~~~~~~~~~~~~~~~ Namespace: {ns}(DB) ~~~~~~~~~~~~~~~~~~~~")
-    #     srci, _ = create_and_print_srci(v, ns)
-    #     ret_val[th][ns]["DB"] = srci
+for ns, v in result['metricsMaps'].items():
+    print(f"\n~~~~~~~~~~~~~~~~~~~~ Namespace: {ns} ~~~~~~~~~~~~~~~~~~~~")
+    srci, sums = create_and_print_srci(v, ns)
+    ret_val[ns]["All"] = srci
+    sums_keys = list(sums.keys())
+    for k in sums_keys:
+        if "memory" in k:
+            ret_val[ns][f"{k}_sum"] = bytes_to_human_readable(sums[k])
+        else:
+            ret_val[ns][f"{k}_sum"] = sums[k]
+# # App Metrics
+# for ns, v in maps['metricsAppMaps'].items():
+#     print(f"\n~~~~~~~~~~~~~~~~~~~~ Namespace: {ns}(Application) ~~~~~~~~~~~~~~~~~~~~")
+#     srci, _ = create_and_print_srci(v, ns)
+#     ret_val[ns]["Application"] = srci
+# # DB Metrics
+# for ns, v in maps['metricsDBMaps'].items():
+#     print(f"\n~~~~~~~~~~~~~~~~~~~~ Namespace: {ns}(DB) ~~~~~~~~~~~~~~~~~~~~")
+#     srci, _ = create_and_print_srci(v, ns)
+#     ret_val[ns]["DB"] = srci
 
 for th, ns_val in ret_val.items():
     # print(f"\n==================== Thread: {th} ====================")
